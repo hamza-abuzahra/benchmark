@@ -10,7 +10,7 @@
             </div>
             <div class="report-btns-right">
                 <button class="btn medium dark-disabled-btn" id="show-btn" @click="filter">Show</button>
-                <button class="btn light-green-btn medium">Export <font-awesome-icon icon="fa-solid fa-download" /></button>
+                <button class="btn light-green-btn medium" @click="exportR">Export <font-awesome-icon icon="fa-solid fa-download" /></button>
             </div>
         </div>
         <div class="report-filters">
@@ -169,7 +169,16 @@ const loadReports = async function() {
     store.lastsdate = startdateel.value
     store.records = data.data
 }
-
+const exportR = async function() {
+    const startdateel = document.querySelector('#start-date')
+    const enddateel = document.querySelector('#end-date')
+    const choiceel = document.querySelector('#reprot-myprops')
+    const pname = choiceel.value
+    const data = await store.getResponse('export', `uemail=${store.currentemail}&pname=${pname}&sd=${startdateel.value}&ed=${enddateel.value}`)    
+    if (data.status){
+        store.showMessage(data.text)
+    }else store.showError(data.text)
+}
 const getmyproperty = async function(){
     const data = await store.getResponse('getmyproperty', `username=${store.currentemail}`)
     const comboboxel = document.querySelector('#reprot-myprops')

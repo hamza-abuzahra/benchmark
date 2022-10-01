@@ -19,13 +19,22 @@ class Db:
             self.cursor.execute("use website")
             self.cursor.execute("select * from user")
             result = self.cursor.fetchall()
-            self.uid = len(result) + 1 
+            if len(result) == 0: 
+                self.uid = 1
+            else:
+                self.uid = int(result[-1]['uid']) + 1 
             self.cursor.execute("select * from properties")
             result = self.cursor.fetchall()
-            self.pid = len(result) + 1 
+            if len(result) == 0:
+                self.pid = 1
+            else:
+                self.pid = int(result[-1]['pid']) + 1 
             self.cursor.execute("select * from records")
             result = self.cursor.fetchall()
-            self.rid = len(result) + 1 
+            if len(result) == 0:
+                self.rid = 1
+            else:
+                self.rid = int(result[-1]['rid']) + 1 
             self.cursor.execute("SET GLOBAL max_allowed_packet=67108864")
             self.connection.commit()
             print(self.rid, self.uid, self.pid)
@@ -50,8 +59,8 @@ class Db:
         if len(result) > 0:
             paswrd = result[0]['upassword']
             if password == paswrd:
-                return True
-        return False
+                return True, result[0]['username']
+        return False, ''
 
     def signup(self, username, password, email, phonenum):
         self.cursor.execute(f"select * from user where uemail = \"{email}\";")
@@ -127,12 +136,13 @@ class Db:
         return True
     
     def loadRecord(self, uemail, pname, sdate, edate):
-        self.cursor.execute(f"select pid from properties inner join user on properties.uid = user.uid where user.uemail = \"{uemail}\" and pname=\"{pname}\"")
+        self.cursor.execute(f"select pid, prooms from properties inner join user on properties.uid = user.uid where user.uemail = \"{uemail}\" and pname=\"{pname}\"")
         result = self.cursor.fetchall()
         pid = result[0]['pid']
+        prooms = result[0]['prooms']
         self.cursor.execute(f"select * from records where (pid={pid} and rdate <= \'{edate}\' and rdate >= \'{sdate}\') order by rdate asc")
         data = self.cursor.fetchall()
-        return (data, True)
+        return (data, True, prooms)
     
     def readpdf(self, uemail, pname, filename):
         # reading pdf file into dataframe
@@ -151,7 +161,7 @@ class Db:
         return True
     
     def export(self, pname, sdate, edate, uemail):
-        data, _ = self.loadRecord(uemail, pname, sdate, edate)
+        data, _, prooms= self.loadRecord(uemail, pname, sdate, edate)
         df = pd.DataFrame(data)
         df = df[['rdate', 'rrooms', 'rrevenue']]
         df['rrevenue'] = round(pd.to_numeric(df['rrevenue']) / df['rrooms'], 2)
@@ -191,6 +201,7 @@ class Db:
         worksheet.insert_chart('G20', chart2)
         worksheet.insert_chart('O2', chart3)
         writer.close()
+        return True
         
 
 
@@ -211,8 +222,9 @@ def login():
     email = request.args.get("username", None)
     password = request.args.get("password", None)
     data = {"status": False, "text": "credentials are wrong "}
-    if db.login(email, password):
-        data = {"status": True, "text": "user successfully logged in"}
+    check, user = db.login(email, password)
+    if check:
+        data = {"status": True, "text": "user successfully logged in", 'un': user}
     return jsonify(data)
 
 @app.route("/signup", methods=['get'])
@@ -282,7 +294,7 @@ def loadRecord():
     enddate = request.args.get("ed", None)
     uemail = request.args.get("uemail", None)
     result = {"status": False, "text": "Error loading record", "data": {}}
-    data, check = db.loadRecord(uemail, pname, startdate, enddate)
+    data, check, _ = db.loadRecord(uemail, pname, startdate, enddate)
     if check:
         result = {"status": True, "text": "Record Loaded Successfully", "data": data}
     return jsonify(result)

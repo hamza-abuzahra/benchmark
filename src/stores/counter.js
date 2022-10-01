@@ -5,11 +5,11 @@ export const useStore = defineStore('store', {
   state: () => ({ 
     loginShow: true, 
     formShow: false, 
-    loggedin: true, 
+    loggedin: false, 
     propadd: true,
     url: "http://127.0.0.1:5000/",
-    currentUser: 'hamza.abuzahra@bilgiedu.net', 
-    currentemail: 'hamza.abuzahra@bilgiedu.net', 
+    currentUser: '', 
+    currentemail: '', 
     records: [],
     lastsdate: '', 
     lastedate: ''

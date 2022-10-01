@@ -30,7 +30,7 @@ const login = async function(){
         passel.value = ''
         store.formShow = false
         store.showMessage(data.text)
-        store.currentUser = un
+        store.currentUser = data.username
         store.currentemail = un
     } else {
         store.showError(data.text)
