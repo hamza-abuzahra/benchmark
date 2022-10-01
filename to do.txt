@@ -1,0 +1,10 @@
+1. rid, pid, primary key issue:
+ instead of getting the number of the existing entries we should take the max and increase from there, 
+but what if the pk gets too large? should we care? 
+
+(pdf example image)
+
+2. comparing hotel's data with other and combine them in comp. sets
+3. different tables for currencies
+
+
